@@ -19,6 +19,8 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -64,7 +66,9 @@ public class ImageLoader implements Runnable {
     private static int numRetries = DEFAULT_NUM_RETRIES;
 
     private static long expirationInMinutes = DEFAULT_TTL_MINUTES;
-    
+
+    private static Map<String, String> globalHeaders = null;
+
     /**
      * @param numThreads
      *            the maximum number of threads that will be started to download images in parallel
@@ -80,6 +84,17 @@ public class ImageLoader implements Runnable {
      */
     public static void setMaxDownloadAttempts(int numAttempts) {
         ImageLoader.numRetries = numAttempts;
+    }
+
+    public static void setGlobalHeader(String headerKey, String headerValue) {
+        synchronized (ImageLoader.class) {
+            if (globalHeaders == null) {
+                globalHeaders = new HashMap<String, String>();
+            }
+        }
+
+        globalHeaders.put(headerKey, headerValue);
+
     }
 
     /**
@@ -102,11 +117,10 @@ public class ImageLoader implements Runnable {
     }
 
     public static synchronized void initialize(Context context, long expirationInMinutes) {
-    	ImageLoader.expirationInMinutes = expirationInMinutes;
-    	initialize(context);
+        ImageLoader.expirationInMinutes = expirationInMinutes;
+        initialize(context);
     }
 
-    
     private String imageUrl;
 
     private ImageLoaderHandler handler;
@@ -147,8 +161,7 @@ public class ImageLoader implements Runnable {
      */
     public static void start(String imageUrl, ImageView imageView, Drawable dummyDrawable,
             Drawable errorDrawable) {
-        start(imageUrl, imageView, new ImageLoaderHandler(imageView, imageUrl,
- errorDrawable),
+        start(imageUrl, imageView, new ImageLoaderHandler(imageView, imageUrl, errorDrawable),
                 dummyDrawable, errorDrawable);
     }
 
@@ -248,6 +261,13 @@ public class ImageLoader implements Runnable {
             bitmap = downloadImage();
         }
 
+        if (bitmap != null) {
+            Log.d(LOG_TAG, "Loaded bitmap " + bitmap.getWidth() + "x" + bitmap.getHeight()
+                    + " and type " + bitmap.getConfig().name());
+        } else {
+            Log.e(LOG_TAG, "Bitmap loading for " + imageUrl + " ended up null!");
+        }
+
         // TODO: gracefully handle this case.
         notifyImageLoaded(imageUrl, bitmap);
 
@@ -284,6 +304,12 @@ public class ImageLoader implements Runnable {
     protected byte[] retrieveImageData() throws IOException {
         URL url = new URL(imageUrl);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+        if (globalHeaders != null) {
+            for (String key : globalHeaders.keySet()) {
+                connection.setRequestProperty(key, globalHeaders.get(key));
+            }
+        }
 
         // determine the image size and allocate a buffer
         int fileSize = connection.getContentLength();
