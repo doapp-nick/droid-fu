@@ -280,7 +280,7 @@ public class ImageLoader implements Runnable {
 
         while (timesTried <= numRetries) {
             try {
-                byte[] imageData = retrieveImageData();
+                byte[] imageData = retrieveImageData(imageUrl);
 
                 if (imageData != null) {
                     imageCache.put(imageUrl, imageData);
@@ -301,8 +301,8 @@ public class ImageLoader implements Runnable {
         return null;
     }
 
-    protected byte[] retrieveImageData() throws IOException {
-        URL url = new URL(imageUrl);
+    protected byte[] retrieveImageData(String requestedUrl) throws IOException {
+        URL url = new URL(requestedUrl);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
         if (globalHeaders != null) {
@@ -310,16 +310,35 @@ public class ImageLoader implements Runnable {
                 connection.setRequestProperty(key, globalHeaders.get(key));
             }
         }
+        
+        int status = connection.getResponseCode();
+        Log.d(LOG_TAG, "Image request "+requestedUrl+" returned "+status);
+        
+        //TODO DEBUG
+        if(status == 307)
+        {
+            Log.d(LOG_TAG, "Caught redirect while retrieving image!");
+            
+            String redirectedUrl = connection.getHeaderField("Location");
+            
+            Log.d(LOG_TAG, "Image request Location "+connection.getHeaderField("Location"));
+            Log.d(LOG_TAG, "Image request X-Errormsg "+connection.getHeaderField("X-Errormsg"));
+            Log.d(LOG_TAG, "Image request X-ErrorCode "+connection.getHeaderField("X-ErrorCode"));
+            Log.d(LOG_TAG, "Image request X-SrcBytes "+connection.getHeaderField("X-SrcBytes"));
+            
+            return retrieveImageData(redirectedUrl);
+        }
 
         // determine the image size and allocate a buffer
         int fileSize = connection.getContentLength();
-        if (fileSize < 0) {
-            return null;
-        }
+        Log.d(LOG_TAG, "Image request "+requestedUrl+" length was "+fileSize);
+//        if (fileSize < 0) {
+//            return null;
+//        }
         byte[] imageData = new byte[fileSize];
 
         // download the file
-        Log.d(LOG_TAG, "fetching image " + imageUrl + " (" + fileSize + ")");
+        Log.d(LOG_TAG, "fetching image " + requestedUrl + " (" + fileSize + ")");
         BufferedInputStream istream = new BufferedInputStream(connection.getInputStream());
         int bytesRead = 0;
         int offset = 0;

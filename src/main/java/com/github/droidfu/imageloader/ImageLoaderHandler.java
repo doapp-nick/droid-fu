@@ -69,10 +69,17 @@ public class ImageLoaderHandler extends Handler {
         // otherwise it won't do anything.
         String forUrl = (String) imageView.getTag();
         if (imageUrl.equals(forUrl)) {
-            Bitmap image = bitmap != null || errorDrawable == null ? bitmap
-                    : ((BitmapDrawable) errorDrawable).getBitmap();
-            if (image != null) {
+            
+            Bitmap image = bitmap;
+            
+            //if image is null, set it to the error drawable iff it is a BitmapDrawable
+            if(image != null)
+            {
                 imageView.setImageBitmap(image);
+            }
+            else if(errorDrawable != null)
+            {
+                imageView.setImageDrawable(errorDrawable);
             }
 
             return true;

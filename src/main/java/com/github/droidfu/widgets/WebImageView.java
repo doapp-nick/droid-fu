@@ -240,4 +240,13 @@ public class WebImageView extends ViewSwitcher {
 	public String getImageUrl() {
 		return imageUrl;
 	}
+	
+	/**
+	 * Returns the ImageView that is used to display the loaded
+	 * images and other drawables of this view
+	 * @return
+	 */
+	public ImageView getImageView() {
+        return imageView;
+    }
 }
