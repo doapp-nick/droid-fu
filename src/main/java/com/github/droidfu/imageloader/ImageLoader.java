@@ -15,12 +15,6 @@
 
 package com.github.droidfu.imageloader;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -66,8 +60,7 @@ public class ImageLoader implements Runnable {
     private static int numRetries = DEFAULT_NUM_RETRIES;
 
     private static long expirationInMinutes = DEFAULT_TTL_MINUTES;
-
-    private static Map<String, String> globalHeaders = null;
+    private static ImageRetriever imageRetriever = null;
 
     /**
      * @param numThreads
@@ -85,16 +78,10 @@ public class ImageLoader implements Runnable {
     public static void setMaxDownloadAttempts(int numAttempts) {
         ImageLoader.numRetries = numAttempts;
     }
-
-    public static void setGlobalHeader(String headerKey, String headerValue) {
-        synchronized (ImageLoader.class) {
-            if (globalHeaders == null) {
-                globalHeaders = new HashMap<String, String>();
-            }
-        }
-
-        globalHeaders.put(headerKey, headerValue);
-
+    
+    public static void setImageRetriever(ImageRetriever retriever)
+    {
+        ImageLoader.imageRetriever = retriever;
     }
 
     /**
@@ -113,6 +100,10 @@ public class ImageLoader implements Runnable {
         if (imageCache == null) {
             imageCache = new ImageCache(25, expirationInMinutes, DEFAULT_POOL_SIZE);
             imageCache.enableDiskCache(context, ImageCache.DISK_CACHE_SDCARD);
+        }
+        if(imageRetriever == null)
+        {
+            imageRetriever = new DefaultImageRetriever();
         }
     }
 
@@ -280,7 +271,7 @@ public class ImageLoader implements Runnable {
 
         while (timesTried <= numRetries) {
             try {
-                byte[] imageData = retrieveImageData(imageUrl);
+                byte[] imageData = imageRetriever.retrieveImageData(imageUrl);
 
                 if (imageData != null) {
                     imageCache.put(imageUrl, imageData);
@@ -299,59 +290,6 @@ public class ImageLoader implements Runnable {
         }
 
         return null;
-    }
-
-    protected byte[] retrieveImageData(String requestedUrl) throws IOException {
-        URL url = new URL(requestedUrl);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-
-        if (globalHeaders != null) {
-            for (String key : globalHeaders.keySet()) {
-                connection.setRequestProperty(key, globalHeaders.get(key));
-            }
-        }
-        
-        int status = connection.getResponseCode();
-        Log.d(LOG_TAG, "Image request "+requestedUrl+" returned "+status);
-        
-        //TODO DEBUG
-        if(status == 307)
-        {
-            Log.d(LOG_TAG, "Caught redirect while retrieving image!");
-            
-            String redirectedUrl = connection.getHeaderField("Location");
-            
-            Log.d(LOG_TAG, "Image request Location "+connection.getHeaderField("Location"));
-            Log.d(LOG_TAG, "Image request X-Errormsg "+connection.getHeaderField("X-Errormsg"));
-            Log.d(LOG_TAG, "Image request X-ErrorCode "+connection.getHeaderField("X-ErrorCode"));
-            Log.d(LOG_TAG, "Image request X-SrcBytes "+connection.getHeaderField("X-SrcBytes"));
-            
-            return retrieveImageData(redirectedUrl);
-        }
-
-        // determine the image size and allocate a buffer
-        int fileSize = connection.getContentLength();
-        Log.d(LOG_TAG, "Image request "+requestedUrl+" length was "+fileSize);
-//        if (fileSize < 0) {
-//            return null;
-//        }
-        byte[] imageData = new byte[fileSize];
-
-        // download the file
-        Log.d(LOG_TAG, "fetching image " + requestedUrl + " (" + fileSize + ")");
-        BufferedInputStream istream = new BufferedInputStream(connection.getInputStream());
-        int bytesRead = 0;
-        int offset = 0;
-        while (bytesRead != -1 && offset < fileSize) {
-            bytesRead = istream.read(imageData, offset, fileSize - offset);
-            offset += bytesRead;
-        }
-
-        // clean up
-        istream.close();
-        connection.disconnect();
-
-        return imageData;
     }
 
     public void notifyImageLoaded(String url, Bitmap bitmap) {
