@@ -21,11 +21,12 @@ import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Message;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Gravity;
 import android.widget.ImageView;
+import android.widget.ImageView.ScaleType;
 import android.widget.ProgressBar;
 import android.widget.ViewSwitcher;
-import android.widget.ImageView.ScaleType;
 
 import com.github.droidfu.DroidFu;
 import com.github.droidfu.imageloader.ImageLoader;
@@ -186,7 +187,20 @@ public class WebImageView extends ViewSwitcher {
             throw new IllegalStateException(
                     "image URL is null; did you forget to set it for this view?");
         }
-        ImageLoader.start(imageUrl, new DefaultImageLoaderHandler());
+        
+        //bypass loading if we just need to reveal a child
+        String existingImgUrl = (String) imageView.getTag(); //this is where we hide the current url
+        if (imageUrl.equals(existingImgUrl))
+        {
+            //we've already loaded the image actively, just show the child
+            Log.d("NFC", "Bypassing image load since our image view already has it: "+existingImgUrl);
+            setDisplayedChild(1);
+        }
+        else
+        {
+            Log.d("NFC", "Image view must be updated to: "+existingImgUrl);
+            ImageLoader.start(imageUrl, new DefaultImageLoaderHandler());
+        }
     }
 
     public boolean isLoaded() {
@@ -206,6 +220,9 @@ public class WebImageView extends ViewSwitcher {
      */
     public void setNoImageDrawable(int imageResourceId) {
         imageView.setImageDrawable(getContext().getResources().getDrawable(imageResourceId));
+        //remove the tag since we are not showing an image
+        //if we do not clear this tag here, it messes up future reusability by showing confusing the reuse logic
+        imageView.setTag(null);
         setDisplayedChild(1);
     }
 
