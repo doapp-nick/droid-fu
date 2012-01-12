@@ -253,8 +253,7 @@ public class ImageLoader implements Runnable {
         }
 
         if (bitmap != null) {
-            Log.d(LOG_TAG, "Loaded bitmap " + bitmap.getWidth() + "x" + bitmap.getHeight()
-                    + " and type " + bitmap.getConfig().name());
+            Log.d(LOG_TAG, "Loaded bitmap " + bitmap.getWidth() + "x" + bitmap.getHeight());
         } else {
             Log.e(LOG_TAG, "Bitmap loading for " + imageUrl + " ended up null!");
         }
