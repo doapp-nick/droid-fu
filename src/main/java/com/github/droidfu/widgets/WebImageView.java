@@ -23,6 +23,7 @@ import android.os.Message;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.ProgressBar;
@@ -136,14 +137,6 @@ public class WebImageView extends ViewSwitcher {
 
         ImageLoader.initialize(context);
 
-        // ScaleAnimation anim = new ScaleAnimation(0.0f, 1.0f, 0.0f, 1.0f,
-        // 125.0f, preferredItemHeight / 2.0f);
-        // anim.setDuration(500L);
-
-        // AlphaAnimation anim = new AlphaAnimation(0.0f, 1.0f);
-        // anim.setDuration(500L);
-        // setInAnimation(anim);
-
         addLoadingSpinnerView(context);
         addImageView(context);
 
@@ -164,8 +157,7 @@ public class WebImageView extends ViewSwitcher {
             }
         }
 
-        LayoutParams lp = new LayoutParams(progressDrawable.getIntrinsicWidth(), progressDrawable
-                .getIntrinsicHeight());
+        LayoutParams lp = new LayoutParams(progressDrawable.getIntrinsicWidth(), progressDrawable.getIntrinsicHeight());
         lp.gravity = Gravity.CENTER;
 
         addView(loadingSpinner, 0, lp);
@@ -193,12 +185,10 @@ public class WebImageView extends ViewSwitcher {
         if (imageUrl.equals(existingImgUrl))
         {
             //we've already loaded the image actively, just show the child
-            Log.d("NFC", "Bypassing image load since our image view already has it: "+existingImgUrl);
             setDisplayedChild(1);
         }
         else
         {
-            Log.d("NFC", "Image view must be updated to: "+existingImgUrl);
             ImageLoader.start(imageUrl, new DefaultImageLoaderHandler());
         }
     }
