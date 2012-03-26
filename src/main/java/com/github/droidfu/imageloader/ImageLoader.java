@@ -244,6 +244,9 @@ public class ImageLoader implements Runnable {
      * download the image from the Web.
      */
     public void run() {
+        
+       imageRetriever.notifyImageRequestStarted(); 
+        
         // TODO: if we had a way to check for in-memory hits, we could improve performance by
         // fetching an image from the in-memory cache on the main thread
         Bitmap bitmap = imageCache.getBitmap(imageUrl);

@@ -40,4 +40,8 @@ public class DefaultImageRetriever implements ImageRetriever {
         return imageData;
     }
 
+    @Override
+    public void notifyImageRequestStarted() {
+        //nothing
+    }
 }
