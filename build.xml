@@ -3,7 +3,10 @@
 <project name="Droid-fu do nothing build" default="build" basedir="." xmlns:artifact="antlib:org.apache.maven.artifact.ant">
 
 	<target name="build" depends="mvn_package"/>
-	<target name="nodeps" depends="build"/>
+	
+	<!-- redirect android expected build to our build -->
+	<target name="nodeps" />
+	<target name="release" depends="build"/>
 	
 	<!-- setup the class path -->
 	<path id="project.class.path">
