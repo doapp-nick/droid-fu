@@ -70,11 +70,13 @@
 	<target name="-pre-build">
 		<!--mvn dependency:copy-dependencies -DoutputDirectory=./libs -->
 		<typedef resource="org/apache/maven/artifact/ant/antlib.xml" uri="antlib:org.apache.maven.artifact.ant" classpathref="project.class.path" />
-        <!--<artifact:mvn mavenHome="${env.M2_HOME}" pom="pom.xml" fork="true" failonerror="true">
+        <artifact:mvn mavenHome="${env.M2_HOME}" pom="pom.xml" fork="true" failonerror="true">
 			<arg value="dependency:copy-dependencies" />
 			<arg value="-DoutputDirectory=./libs" />
-            <arg value="-DincludeScope=runtime" />
-        </artifact:mvn>-->
+            <arg value="-DexcludeScope=provided" />
+            <arg value="-DincludeScope=runtime"/>
+            <arg value="-DexcludeTransitive=true" />
+        </artifact:mvn>
 	</target>
 
 	<import file="custom_rules.xml" optional="true" />
