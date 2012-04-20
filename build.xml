@@ -23,6 +23,7 @@
 		<artifact:mvn mavenHome="${env.M2_HOME}" pom="pom.xml" fork="true" failonerror="true">
 			<arg value="package" />
 		</artifact:mvn>
-		<copy file="bin/droidfu.jar" tofile="bin/classes.jar"/>
+		<copy file="target/droid-fu-1.0-SNAPSHOT.jar" tofile="bin/droidfu.jar"/>
+        <copy file="target/droid-fu-1.0-SNAPSHOT.jar" tofile="bin/classes.jar"/>
 	</target>
 </project>
