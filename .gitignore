@@ -2,6 +2,7 @@
 target
 gen
 bin
+libs
 *DS_Store
 *~
 *.iml
